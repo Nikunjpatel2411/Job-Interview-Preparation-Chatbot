@@ -52,6 +52,7 @@ The Job Interview Preparation Chatbot is designed to assist users in preparing f
 ---
 ### Screenshots
 ![](C:\Users\NET\Downloads\interview-preparation-bot.png)
+![interview-preparation-bot.png](..%2Finterview-preparation-bot.png)
 
 ### 🤖Try now:
 - **Job Interview Preparation Chatbot:**: [Link]
