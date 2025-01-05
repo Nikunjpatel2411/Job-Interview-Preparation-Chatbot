@@ -21,7 +21,7 @@ nltk.download('punkt')
 translator = Translator()
 
 # Load intents from JSON
-file_path = "C:\\Users\\NET\\Downloads\\GPT\\intents.json"
+file_path = "intents.json"
 try:
     with open(file_path, "r") as file:
         intents = json.load(file)
