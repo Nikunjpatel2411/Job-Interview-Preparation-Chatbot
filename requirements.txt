@@ -1,7 +1,8 @@
 streamlit==1.13.0
 gTTS==2.2.3
 SpeechRecognition==3.8.1
-playsound==1.2.2
 nltk==3.7
-scikit-learn==0.24.2
+scikit-learn==1.1.1
 googletrans==4.0.0-rc1
+# playsound==1.2.2 (commented out or removed)
+numpy==1.24.0
