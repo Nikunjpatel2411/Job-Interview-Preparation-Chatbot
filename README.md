@@ -63,7 +63,7 @@ The Job Interview Preparation Chatbot is designed to assist users in preparing f
 <img src="Output/Light Mood View.png"/>
 
 ### 🤖Try now:
-- **Job Interview Preparation Chatbot:**: [Link]
+- **Job Interview Preparation Chatbot:**: [Link](https://interview-pro-chatbot.streamlit.app/)
   
 ### Prerequisites
 - Python 3.8 or above
