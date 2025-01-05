@@ -1,17 +1,16 @@
 import os
 import json
-import datetime
 import random
-import nltk
 import ssl
-import pyttsx3
-import speech_recognition as sr
+import nltk
 import streamlit as st
-from googletrans import Translator
+from gtts import gTTS
+import tempfile
+import playsound
+import speech_recognition as sr
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from PIL import Image
-import threading
+from googletrans import Translator
 
 # Setup for NLTK
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -46,6 +45,7 @@ y = tags
 clf = LogisticRegression(random_state=0, max_iter=10000)
 clf.fit(X, y)
 
+
 # Format response
 def format_response(intent):
     response = random.choice(intent['responses'])
@@ -60,6 +60,7 @@ def format_response(intent):
             response += f"\n\nResources:\n{resources}"
     return response
 
+
 # Chatbot Response
 def chatbot(input_text, user_lang):
     try:
@@ -70,48 +71,59 @@ def chatbot(input_text, user_lang):
         for intent in intents:
             if intent['tag'] == predicted_tag:
                 response = format_response(intent)
-                # Translate bot's response back to the user's language
                 response_translated = translator.translate(response, src='en', dest=user_lang).text
                 return response_translated
 
     except Exception as e:
         return f"I couldn't process your request. Please try again. ({str(e)})"
 
-# Voice Input (Fixing the speech recognition)
-recognizer = sr.Recognizer()
 
-def get_audio_input():
+# Voice Output
+def speak_response(response):
+    # Create a custom temporary directory with appropriate permissions
+    temp_dir = os.path.join(os.getcwd(), 'temp_audio')
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)  # Create the directory if it doesn't exist
+
+    # Create the temporary audio file path in the custom directory
+    temp_audio_path = os.path.join(temp_dir, "response.mp3")
+
+    try:
+        # Generate speech and save to the specified file
+        tts = gTTS(response)
+        tts.save(temp_audio_path)
+
+        # Play the sound
+        playsound.playsound(temp_audio_path)
+
+        # Optionally delete the file after playback
+        os.remove(temp_audio_path)
+
+    except Exception as e:
+        print(f"Error during speech synthesis or playback: {str(e)}")
+
+
+# Speech Input using SpeechRecognition
+def listen_to_user():
+    recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        st.write("Listening...")
-        recognizer.adjust_for_ambient_noise(source)  # Adjust for ambient noise
+        st.info("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
         try:
             user_input = recognizer.recognize_google(audio)
-            st.session_state.error_message = ""  # Clear any previous error message
-            st.write(f"Recognized: {user_input}")
+            st.success(f"You said: {user_input}")
             return user_input
         except sr.UnknownValueError:
-            st.session_state.error_message = "Sorry, I could not understand the audio. Please try again."
+            st.error("Sorry, I did not understand that.")
             return None
-        except sr.RequestError:
-            st.session_state.error_message = "Could not request results from Google Speech Recognition service."
+        except sr.RequestError as e:
+            st.error(f"Error with the speech recognition service: {e}")
             return None
 
-# Text-to-Speech Function with threading
-engine = pyttsx3.init()
-
-def speak_response(response):
-    def speak():
-        engine.say(response)
-        engine.runAndWait()
-
-    # Run speech in a separate thread
-    speech_thread = threading.Thread(target=speak)
-    speech_thread.start()
 
 # Main Application
 def main():
-    # Sidebar with Menu (Home, Conversation History, About)
     st.sidebar.image("chatbot_logo.png", width=150)
     menu_options = ["Home", "Conversation History", "About"]
     choice = st.sidebar.radio("Menu", menu_options)
@@ -121,11 +133,8 @@ def main():
 
     # Home Section
     if choice == "Home":
-        # Static Header
         st.markdown("<h1 style='text-align: center;'>Job Interview Preparation Chatbot</h1>", unsafe_allow_html=True)
-        st.markdown("<h5 style='text-align: center;'>Intents-Based Chatbot using NLP</h5>", unsafe_allow_html=True)
 
-        # Sidebar with Language Selection Dropdown
         st.sidebar.title("Language Selection")
         language_options = {
             "English": "en",
@@ -138,70 +147,53 @@ def main():
         user_lang = st.sidebar.selectbox("Choose your language:", list(language_options.keys()))
         user_lang_code = language_options[user_lang]
 
-        # Display Chat History (user and bot messages) without timestamps
         for chat in st.session_state.chat_log:
             if chat['sender'] == 'user':
-                st.markdown(f"<div style='padding:10px; background-color:#262730; border-radius:10px;color:#edf0eb;margin-bottom:5px;'><B>You:</B> {chat['message']}</div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div style='padding:10px; background-color:#262730; border-radius:10px;color:#edf0eb;margin-bottom:5px;'><B>You:</B> {chat['message']}</div>",
+                    unsafe_allow_html=True)
             else:
-                st.markdown(f"<div style='padding:10px; background-color:#E5E5E5; border-radius:10px;color:#020500; margin-bottom:5px;'><B>Bot:</B> {chat['message']}</div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div style='padding:10px; background-color:#E5E5E5; border-radius:10px;color:#020500; margin-bottom:5px;'><B>Bot:</B> {chat['message']}</div>",
+                    unsafe_allow_html=True)
 
-        # Input Box for User Message and Auto-submit on Enter
         col1, col2 = st.columns([8, 2])
         with col1:
-            # Use a unique key for the user input field
-            user_input = st.text_input("Type your message or click the mic to speak:", key="user_input_home", label_visibility="collapsed")
+            user_input = st.text_input("Type your message or click the mic to speak:", key="user_input_home",
+                                       label_visibility="collapsed")
         with col2:
             if st.button("Speak", use_container_width=True):
-                recognized_text = get_audio_input()
-                if recognized_text:
-                    st.session_state.recognized_text = recognized_text
+                user_input = listen_to_user()  # Capture voice input when the user clicks the "Speak" button
+                if user_input:
+                    st.session_state.chat_log.append({"sender": "user", "message": user_input})
+                    response = chatbot(user_input, user_lang_code)
+                    st.session_state.chat_log.append({"sender": "bot", "message": response})
+                    speak_response(response)
 
-        # Update the input field with recognized text from speech
-        if "recognized_text" in st.session_state and st.session_state.recognized_text:
-            user_input = st.session_state.recognized_text
-
-        # Display the error message if it's set in session state
-        if "error_message" in st.session_state and st.session_state.error_message:
-            st.error(st.session_state.error_message)
-
-        # If the user presses Enter or submits input
         if user_input:
-            # Append user input to chat log without timestamp for Home section
-            st.session_state.chat_log.append({"sender": "user", "message": user_input, "timestamp": datetime.datetime.now()})
-
-            # Get chatbot response
+            st.session_state.chat_log.append({"sender": "user", "message": user_input})
             response = chatbot(user_input, user_lang_code)
-
-            # Append bot response to chat log with timestamp for Home section
-            st.session_state.chat_log.append({"sender": "bot", "message": response, "timestamp": datetime.datetime.now()})
-
-            # Text-to-Speech
+            st.session_state.chat_log.append({"sender": "bot", "message": response})
             speak_response(response)
 
-            # Instead of clearing `st.session_state.user_input`, we reset a custom variable
-            st.session_state.recognized_text = ""  # Clear recognized text after submission
-
-    # Conversation History Section
     elif choice == "Conversation History":
         st.title("Conversation History")
         if len(st.session_state.chat_log) == 0:
             st.write("No conversation history yet.")
         else:
-            # Display conversation with timestamp in History section
             for chat in st.session_state.chat_log:
-                timestamp = chat['timestamp'].strftime("%Y-%m-%d %H:%M:%S")
                 if chat['sender'] == 'user':
-                    st.markdown(f"You ({timestamp}): {chat['message']}")
+                    st.markdown(f"You: {chat['message']}")
                 else:
-                    st.markdown(f"Bot ({timestamp}): {chat['message']}")
+                    st.markdown(f"Bot: {chat['message']}")
 
-    # About Section
     elif choice == "About":
         st.title("About the Chatbot")
         st.write("""
         This chatbot assists users in preparing for job interviews by providing tips, answering common questions, 
         and offering advice. It utilizes NLP, machine learning, and multilingual support for an interactive experience.
         """)
+
 
 if __name__ == '__main__':
     main()

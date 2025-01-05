@@ -54,7 +54,7 @@ The Job Interview Preparation Chatbot is designed to assist users in preparing f
 
 
 ### 🤖Try now:
-- **Job Interview Preparation Chatbot:**: [Link](https://carebuddy.streamli)
+- **Job Interview Preparation Chatbot:**: [Link](https://interview-preparation-bot.streamlit.app/)
   
 ### Prerequisites
 - Python 3.8 or above

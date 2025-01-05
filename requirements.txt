@@ -1,6 +1,6 @@
-nltk
 streamlit
 scikit-learn
-pyttsx3
-speechrecognition
+nltk
 googletrans==4.0.0-rc1
+gtts
+playsound
