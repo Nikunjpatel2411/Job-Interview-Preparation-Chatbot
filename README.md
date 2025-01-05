@@ -51,10 +51,10 @@ The Job Interview Preparation Chatbot is designed to assist users in preparing f
 
 ---
 ### Screenshots
-
+![](C:\Users\NET\Downloads\interview-preparation-bot.png)
 
 ### 🤖Try now:
-- **Job Interview Preparation Chatbot:**: [Link](https://interview-preparation-bot.streamlit.app/)
+- **Job Interview Preparation Chatbot:**: [Link]
   
 ### Prerequisites
 - Python 3.8 or above
