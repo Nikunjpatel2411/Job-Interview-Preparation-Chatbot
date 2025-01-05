@@ -51,7 +51,16 @@ The Job Interview Preparation Chatbot is designed to assist users in preparing f
 
 ---
 ### Screenshots
+1. Basic Look 
 <img src="Output/interview-preparation-bot.png"/>
+2. Multi Language Support
+<img src="Output/Multi Language Support.png"/>
+3. Speak Option 
+<img src="Output/Speak Option.png"/>
+4. Conversation History
+<img src="Output/Conversation History.png"/>
+5. Light Mood
+<img src="Output/Light Mood View.png"/>
 
 ### 🤖Try now:
 - **Job Interview Preparation Chatbot:**: [Link]
